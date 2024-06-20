@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import requests
 import json
+import pyodbc
 
 # Take environment variables from .env.
 load_dotenv()
@@ -18,5 +19,3 @@ headers = {
 # Make the GET reqeuest
 response = requests.get(API_ENDPOINT, headers=headers)
 response_json = response.json()
-with open('data.json', 'w') as f:
-    json.dump(response_json, f, indent=4)
