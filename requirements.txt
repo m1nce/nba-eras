@@ -2,3 +2,4 @@ python-dotenv==1.0.1
 requests==2.31.0
 pyodbc==4.0.34
 psycopg2==2.9.9
+tenacity==8.0.1
