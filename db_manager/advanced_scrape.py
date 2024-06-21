@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import requests
 import psycopg2
 from tqdm import tqdm
-from tenacity import retry, wait_exponential, stop_after_attempt
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+import numpy as np
 
 # Take environment variables from .env.
 load_dotenv()
@@ -53,7 +54,7 @@ INSERT INTO player_game (
 ON CONFLICT (player_id, game_id) DO NOTHING;
 """
 
-@retry(wait=wait_exponential(multiplier=1, min=4, max=10), stop=stop_after_attempt(5))
+@retry(wait=wait_exponential(multiplier=1, min=4, max=10), stop=stop_after_attempt(5), retry=retry_if_exception_type(requests.exceptions.RequestException))
 def make_request(params):
     response = requests.get(API_ENDPOINT, headers=headers, params=params)
     response.raise_for_status()  # Raise an exception for HTTP errors
@@ -68,19 +69,26 @@ def fetch_data(season):
         }
         if cur_cursor:
             params["cursor"] = cur_cursor
-        response = make_request(params)
-        data = response.json()
-        yield data['data']
-        cur_cursor = data['meta'].get('next_cursor', None)
-        if not cur_cursor:
+        try:
+            response = make_request(params)
+            data = response.json()
+            yield data['data'], len(response.content)
+            cur_cursor = data['meta'].get('next_cursor', None)
+            if not cur_cursor:
+                break
+        except requests.exceptions.HTTPError as e:
+            tqdm.write(f"HTTPError: {e.response.status_code} for URL: {e.response.url}")
+            break
+        except Exception as e:
+            tqdm.write(f"Exception: {str(e)}")
             break
 
 # Function to fetch data from the API and insert into PostgreSQL
 def fetch_and_store_data(seasons):
     for season in tqdm(seasons, desc="Seasons", unit="season"):
         data_generator = fetch_data(season)
-        page_count = 0
-        for data_page in tqdm(data_generator, desc=f"Season {season}", unit="page", leave=False):
+        for data_page, data_size in tqdm(data_generator, desc=f"Season {season}", unit="page", leave=False):
+            total_bytes += data_size
             for record in data_page:
                 player = record.pop('player')
                 game = record.pop('game')
@@ -113,10 +121,9 @@ def fetch_and_store_data(seasons):
                 ))
 
             conn.commit()
-            page_count += 1
 
 # List of seasons to fetch data for
-seasons = [2014]
+seasons = np.arange(2014, 2023)
 
 # Fetch the data and store it in the database
 fetch_and_store_data(seasons)
@@ -125,4 +132,5 @@ fetch_and_store_data(seasons)
 cursor.close()
 conn.close()
 
+print("------------------------------------")
 print("Done!")
