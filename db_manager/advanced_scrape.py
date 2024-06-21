@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import requests
 import psycopg2
 from tqdm import tqdm
+from tenacity import retry, wait_exponential, stop_after_attempt
 
 # Take environment variables from .env.
 load_dotenv()
@@ -52,70 +53,70 @@ INSERT INTO player_game (
 ON CONFLICT (player_id, game_id) DO NOTHING;
 """
 
+@retry(wait=wait_exponential(multiplier=1, min=4, max=10), stop=stop_after_attempt(5))
+def make_request(params):
+    response = requests.get(API_ENDPOINT, headers=headers, params=params)
+    response.raise_for_status()  # Raise an exception for HTTP errors
+    return response
+
+def fetch_data(season):
+    cur_cursor = None
+    while True:
+        params = {
+            "seasons[]": season,
+            "per_page": 100,
+        }
+        if cur_cursor:
+            params["cursor"] = cur_cursor
+        response = make_request(params)
+        data = response.json()
+        yield data['data']
+        cur_cursor = data['meta'].get('next_cursor', None)
+        if not cur_cursor:
+            break
+
 # Function to fetch data from the API and insert into PostgreSQL
 def fetch_and_store_data(seasons):
-    for season in tqdm(seasons, desc="Seasons"):
-        cur_cursor = None
-        has_more = True
-        
-        with tqdm(desc=f"Season {season}", unit="page") as pbar:
-            while has_more:
-                params = {
-                    "seasons[]": season,
-                    "per_page": 100,
-                }
-                if cur_cursor:
-                    params["cursor"] = cur_cursor
-                response = requests.get(API_ENDPOINT, headers=headers, params=params)
-                if response.status_code != 200:
-                    print(f"Error: Unable to fetch data (status code: {response.status_code})")
-                    break
-                
-                data = response.json()
-                
-                for record in data['data']:
-                    player = record.pop('player')
-                    game = record.pop('game')
+    for season in tqdm(seasons, desc="Seasons", unit="season"):
+        data_generator = fetch_data(season)
+        page_count = 0
+        for data_page in tqdm(data_generator, desc=f"Season {season}", unit="page", leave=False):
+            for record in data_page:
+                player = record.pop('player')
+                game = record.pop('game')
 
-                    # Insert into player table
-                    cursor.execute(player_insert_query, (
-                        player['id'], player['first_name'], player['last_name'], player.get('position', None), 
-                        player.get('height', None), player.get('weight', None), player.get('jersey_number', None), 
-                        player.get('college', None), player.get('country', None), player.get('draft_year', None), 
-                        player.get('draft_round', None), player.get('draft_number', None), player.get('team_id', None)
-                    ))
+                # Insert into player table
+                cursor.execute(player_insert_query, (
+                    player['id'], player['first_name'], player['last_name'], player.get('position', None), 
+                    player.get('height', None), player.get('weight', None), player.get('jersey_number', None), 
+                    player.get('college', None), player.get('country', None), player.get('draft_year', None), 
+                    player.get('draft_round', None), player.get('draft_number', None), player.get('team_id', None)
+                ))
 
-                    # Insert into game table
-                    cursor.execute(game_insert_query, (
-                        game['id'], game['date'], game['season'], game['postseason'], 
-                        game['home_team_score'], game['visitor_team_score'], 
-                        game['home_team_id'], game['visitor_team_id']
-                    ))
+                # Insert into game table
+                cursor.execute(game_insert_query, (
+                    game['id'], game['date'], game['season'], game['postseason'], 
+                    game['home_team_score'], game['visitor_team_score'], 
+                    game['home_team_id'], game['visitor_team_id']
+                ))
 
-                    # Insert into player_game table
-                    cursor.execute(player_game_insert_query, (
-                        player['id'], game['id'], 
-                        record.get('pie', None), record.get('pace', None), 
-                        record.get('assist_percentage', None), record.get('assist_ratio', None), 
-                        record.get('assist_to_turnover', None), record.get('defensive_rating', None), 
-                        record.get('defensive_rebound_percentage', None), record.get('effective_field_goal_percentage', None), 
-                        record.get('net_rating', None), record.get('offensive_rating', None), 
-                        record.get('offensive_rebound_percentage', None), record.get('true_shooting_percentage', None), 
-                        record.get('turnover_ratio', None), record.get('usage_percentage', None)
-                    ))
+                # Insert into player_game table
+                cursor.execute(player_game_insert_query, (
+                    player['id'], game['id'], 
+                    record.get('pie', None), record.get('pace', None), 
+                    record.get('assist_percentage', None), record.get('assist_ratio', None), 
+                    record.get('assist_to_turnover', None), record.get('defensive_rating', None), 
+                    record.get('defensive_rebound_percentage', None), record.get('effective_field_goal_percentage', None), 
+                    record.get('net_rating', None), record.get('offensive_rating', None), 
+                    record.get('offensive_rebound_percentage', None), record.get('true_shooting_percentage', None), 
+                    record.get('turnover_ratio', None), record.get('usage_percentage', None)
+                ))
 
-                conn.commit()
-
-                # Check if there's more data to fetch
-                cur_cursor = data['meta'].get('next_cursor', None)
-                if not cur_cursor:
-                    has_more = False
-
-                # Update the progress bar
-                pbar.update(1)
+            conn.commit()
+            page_count += 1
 
 # List of seasons to fetch data for
-seasons = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+seasons = [2014]
 
 # Fetch the data and store it in the database
 fetch_and_store_data(seasons)
