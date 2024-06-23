@@ -83,8 +83,8 @@ CREATE TABLE IF NOT EXISTS game (
 
 create_player_game_table = """
 CREATE TABLE IF NOT EXISTS player_game (
-    player_id int,
-    game_id int,
+    player_id INT,
+    game_id INT,
     pie FLOAT,
     pace FLOAT,
     assist_percentage FLOAT,
@@ -102,6 +102,33 @@ CREATE TABLE IF NOT EXISTS player_game (
     PRIMARY KEY (player_id, game_id),
     FOREIGN KEY (player_id) REFERENCES player (player_id),
     FOREIGN KEY (game_id) REFERENCES game (game_id)
+);
+"""
+
+create_box_score_table = """
+CREATE TABLE IF NOT EXISTS box_score (
+    box_id SERIAL PRIMARY KEY,
+    player_id INT,
+    date DATE,
+    min FLOAT,
+    fgm INT,
+    fga INT,
+    fg_pct FLOAT,
+    fg3m INT,
+    fg3a INT,
+    fg3_pct FLOAT,
+    ftm INT,
+    fta INT,
+    ft_pct FLOAT,
+    oreb INT,
+    dreb INT,
+    reb INT,
+    ast INT,
+    stl INT,
+    blk INT,
+    turnover INT,
+    pf INT,
+    pts INT
 );
 """
 
@@ -134,6 +161,12 @@ if not check_table_exists('player_game'):
     print("Table 'player_game' created successfully.")
 else:
     print("Table 'player_game' already exists.")
+
+if not check_table_exists('box_score'):
+    cursor.execute(create_box_score_table)
+    print("Table 'box_score' created successfully.")
+else:
+    print("Table 'box_score' already exists.")
 
 # Commit the transaction
 conn.commit()
