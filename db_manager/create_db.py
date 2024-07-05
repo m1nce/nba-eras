@@ -15,7 +15,7 @@ admin_conn.autocommit = True
 admin_cursor = admin_conn.cursor()
 
 # Create database if it doesn't exist
-database_name = "nba_stats"
+database_name = "box_scores"
 admin_cursor.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [database_name])
 exists = admin_cursor.fetchone()
 if not exists:
@@ -70,12 +70,10 @@ create_game_table = """
 CREATE TABLE IF NOT EXISTS game (
     game_id INT PRIMARY KEY,
     date DATE,
-    season INT,
-    postseason BOOL,
     home_team_score INT,
-    away_team_score INT,
+    visitor_team_score INT,
     home_team_id INT,
-    away_team_id INT,
+    visitor_team_id INT,
     FOREIGN KEY (home_team_id) REFERENCES team (team_id),
     FOREIGN KEY (away_team_id) REFERENCES team (team_id)
 );
@@ -85,31 +83,6 @@ create_player_game_table = """
 CREATE TABLE IF NOT EXISTS player_game (
     player_id INT,
     game_id INT,
-    pie FLOAT,
-    pace FLOAT,
-    assist_percentage FLOAT,
-    assist_ratio FLOAT,
-    assist_to_turnover FLOAT,
-    defensive_rating FLOAT,
-    defensive_rebound_percentage FLOAT,
-    effective_field_goal_percentage FLOAT,
-    net_rating FLOAT,
-    offensive_rating FLOAT,
-    offensive_rebound_percentage FLOAT,
-    true_shooting_percentage FLOAT,
-    turnover_ratio FLOAT,
-    usage_percentage FLOAT,
-    PRIMARY KEY (player_id, game_id),
-    FOREIGN KEY (player_id) REFERENCES player (player_id),
-    FOREIGN KEY (game_id) REFERENCES game (game_id)
-);
-"""
-
-create_box_score_table = """
-CREATE TABLE IF NOT EXISTS box_score (
-    box_id SERIAL PRIMARY KEY,
-    player_id INT,
-    date DATE,
     min FLOAT,
     fgm INT,
     fga INT,
@@ -128,7 +101,30 @@ CREATE TABLE IF NOT EXISTS box_score (
     blk INT,
     turnover INT,
     pf INT,
-    pts INT
+    pts INT,
+    PRIMARY KEY (player_id, game_id),
+    FOREIGN KEY (player_id) REFERENCES player (player_id),
+    FOREIGN KEY (game_id) REFERENCES game (game_id)
+);
+"""
+
+create_player_team_table = """
+CREATE TABLE IF NOT EXISTS player_team (
+    player_id int,
+    team_id int,
+    PRIMARY KEY (player_id, team_id),
+    FOREIGN KEY (player_id) REFERENCES player (player_id),
+    FOREIGN KEY (team_id) REFERENCES team (team_id)
+);
+"""
+
+create_team_game_table = """
+CREATE TABLE IF NOT EXISTS team_game (
+    team_id int,
+    game_id int,
+    PRIMARY KEY (team_id, game_id),
+    FOREIGN KEY (team_id) REFERENCES team (team_id),
+    FOREIGN KEY (game_id) REFERENCES game (game_id)
 );
 """
 
@@ -162,11 +158,17 @@ if not check_table_exists('player_game'):
 else:
     print("Table 'player_game' already exists.")
 
-if not check_table_exists('box_score'):
-    cursor.execute(create_box_score_table)
-    print("Table 'box_score' created successfully.")
+if not check_table_exists('player_team'):
+    cursor.execute(create_player_team_table)
+    print("Table 'player_team' created successfully.")
 else:
-    print("Table 'box_score' already exists.")
+    print("Table 'player_team' already exists.")
+
+if not check_table_exists('team_game'):
+    cursor.execute(create_team_game_table)
+    print("Table 'team_game' created successfully.")
+else:
+    print("Table 'team_game' already exists.")
 
 # Commit the transaction
 conn.commit()

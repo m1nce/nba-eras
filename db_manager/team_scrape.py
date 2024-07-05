@@ -21,7 +21,7 @@ response = requests.get(API_ENDPOINT, headers=headers)
 response_json = response.json()
 
 # PostgreSQL connection details
-conn_str = (f"dbname=nba_stats user={os.getenv('DB_USER')} " +
+conn_str = (f"dbname=box_scores user={os.getenv('DB_USER')} " +
             f"password={os.getenv('DB_PASSWORD')} host={os.getenv('DB_HOST')} " +
             f"port={os.getenv('DB_PORT')}")
 

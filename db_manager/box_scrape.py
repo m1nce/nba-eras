@@ -23,7 +23,7 @@ headers = {
 }
 
 # Database connection details
-conn_str = (f"dbname=nba_stats user={os.getenv('DB_USER')} " +
+conn_str = (f"dbname=box_scores user={os.getenv('DB_USER')} " +
             f"password={os.getenv('DB_PASS')} host={os.getenv('DB_HOST')} " +
             f"port={os.getenv('DB_PORT')}")
 
@@ -34,23 +34,39 @@ cursor = conn.cursor()
 # Create an engine instance
 engine = create_engine(f'postgresql+psycopg2://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/nba_stats')
 
-# Query the dates of the database
-query = """
-SELECT DISTINCT date
-FROM game
-ORDER BY date ASC;
+player_insert_query = """
+INSERT INTO player (
+    player_id, first_name, last_name, position, height, weight, jersey_number, college, country
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+ON CONFLICT (player_id) DO NOTHING;
 """
 
-dates = pd.read_sql(query, engine)
-flattened_dates = dates.to_numpy().flatten()
+game_insert_query = """
+INSERT INTO game (
+    game_id, date, home_team_id, visitor_team_id, home_team_score, visitor_team_score
+) VALUES (%s, %s, %s, %s, %s, %s)
+ON CONFLICT (game_id) DO NOTHING;
+"""
 
-print(f"Processing {len(flattened_dates)} dates...")
-
-box_score_insert_query = """
-INSERT INTO box_score (
-    player_id, date, min, fgm, fga, fg_pct, fg3m, fg3a, fg3_pct, ftm, fta, ft_pct, 
-    oreb, dreb, reb, ast, stl, blk, turnover, pf, pts
+player_game_insert_query = """
+INSERT INTO player_game (
+    player_id, game_id, team_id, min_played, fgm, fga, fg_pct, fg3m, fg3a, fg3_pct, ftm, fta, ft_pct, oreb, dreb, reb, ast, stl, blk, turnover, pf, pts
 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+ON CONFLICT (player_id, game_id) DO NOTHING;
+"""
+
+player_team_insert_query = """
+INSERT INTO player_team (
+    player_id, team_id
+) VALUES (%s, %s)
+ON CONFLICT (player_id, team_id) DO NOTHING;
+"""
+
+team_game_insert_query = """
+INSERT INTO team_game (
+    team_id, game_id
+) VALUES (%s, %s)
+ON CONFLICT (team_id, game_id) DO NOTHING;
 """
 
 # List to store dates that encounter errors
