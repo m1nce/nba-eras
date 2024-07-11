@@ -1,8 +1,6 @@
 import os
-import time
 from dotenv import load_dotenv
 import requests
-import psycopg2
 from tqdm import tqdm
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
 import pandas as pd

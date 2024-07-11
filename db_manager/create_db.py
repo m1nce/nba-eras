@@ -60,9 +60,7 @@ CREATE TABLE IF NOT EXISTS player (
     country VARCHAR(50),
     draft_year INT,
     draft_round INT,
-    draft_number INT,
-    team_id INT,
-    FOREIGN KEY (team_id) REFERENCES team (team_id)
+    draft_number INT
 );
 """
 
@@ -75,7 +73,7 @@ CREATE TABLE IF NOT EXISTS game (
     home_team_id INT,
     visitor_team_id INT,
     FOREIGN KEY (home_team_id) REFERENCES team (team_id),
-    FOREIGN KEY (away_team_id) REFERENCES team (team_id)
+    FOREIGN KEY (visitor_team_id) REFERENCES team (team_id)
 );
 """
 
