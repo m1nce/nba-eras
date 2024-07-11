@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
+set -e
+
 # Change to the script directory
 cd "$(dirname "$0")"
 
@@ -12,7 +15,7 @@ source temp_env/bin/activate
 
 # Install dependencies
 echo "Installing dependencies..."
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 
 # Run destroy.sh to reset the database
 echo "Running destroy.sh..."
@@ -26,9 +29,9 @@ python3 create_db.py
 echo "Running team_scrape.py..."
 python3 team_scrape.py
 
-# Run advanced_scrape.py to scrape advanced data
-echo "Running advanced_scrape.py..."
-python3 advanced_scrape.py
+# Get box scores
+echo "Getting box scores..."
+./box_score/run_box_score.sh
 
 # Deactivate and remove the virtual environment
 deactivate
