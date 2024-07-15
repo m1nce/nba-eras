@@ -15,8 +15,9 @@ execute_psql() {
 
 # Drop tables if they exist
 echo "Dropping existing tables..."
-execute_psql "DROP TABLE IF EXISTS player CASCADE;"
+execute_psql "DROP TABLE IF EXISTS team CASCADE;"
 execute_psql "DROP TABLE IF EXISTS game CASCADE;"
 execute_psql "DROP TABLE IF EXISTS player_game CASCADE;"
 execute_psql "DROP TABLE IF EXISTS player_team CASCADE;"
 execute_psql "DROP TABLE IF EXISTS team_game CASCADE;"
+execute_psql "DROP TABLE IF EXISTS player CASCADE;"

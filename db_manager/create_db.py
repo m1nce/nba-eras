@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS player (
     position VARCHAR(10),
     height VARCHAR(6),
     weight INT,
-    jersey_number INT,
+    jersey_number VARCHAR(10),
     college VARCHAR(50),
     country VARCHAR(50),
     draft_year INT,
@@ -134,15 +134,15 @@ def check_table_exists(table_name):
 # Create tables and print messages
 if not check_table_exists('team'):
     cursor.execute(create_team_table)
-    print("Table 'player' created successfully.")
-else:
-    print("Table 'player' already exists.")
-
-if not check_table_exists('player'):
-    cursor.execute(create_player_table)
     print("Table 'team' created successfully.")
 else:
     print("Table 'team' already exists.")
+
+if not check_table_exists('player'):
+    cursor.execute(create_player_table)
+    print("Table 'player' created successfully.")
+else:
+    print("Table 'player' already exists.")
 
 if not check_table_exists('game'):
     cursor.execute(create_game_table)

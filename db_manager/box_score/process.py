@@ -43,9 +43,9 @@ def process_date(date):
                 for player in game[team]['players']:
                     player_record = (
                         player['player']['id'], player['player']['first_name'], player['player']['last_name'], 
-                        none_to_missing(player['player']['position']), player['player']['height'], player['player']['weight'], 
-                        player['player']['jersey_number'], none_to_missing(player['player']['college']), none_to_missing(player['player']['country']),
-                        none_to_zero(player['player']['draft_year']), none_to_zero(player['player']['draft_round']), none_to_zero(player['player']['draft_number'])
+                        player['player']['position'], player['player']['height'], player['player']['weight'], 
+                        player['player']['jersey_number'], player['player']['college'], player['player']['country'],
+                        player['player']['draft_year'], player['player']['draft_round'],player['player']['draft_number']
                     )
                     player_records.append(player_record)
 
