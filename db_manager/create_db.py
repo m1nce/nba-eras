@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS player (
     last_name VARCHAR(50),
     position VARCHAR(10),
     height VARCHAR(6),
-    weight INT,
+    weight VARCHAR(3),
     jersey_number VARCHAR(10),
     college VARCHAR(50),
     country VARCHAR(50),
