@@ -34,8 +34,8 @@ def process_date(date):
 
         for game in data['data']:
             game_record = (
-                local_game_id, game['date'], game['home_team_score'], game['visitor_team_score'],
-                game['home_team']['id'], game['visitor_team']['id']
+                local_game_id, game['date'], game['season'], game['home_team_score'], 
+                game['visitor_team_score'], game['home_team']['id'], game['visitor_team']['id']
             )
             game_records.append(game_record)
 

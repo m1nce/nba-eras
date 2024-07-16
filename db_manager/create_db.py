@@ -68,6 +68,7 @@ create_game_table = """
 CREATE TABLE IF NOT EXISTS game (
     game_id INT PRIMARY KEY,
     date DATE,
+    season INT,
     home_team_score INT,
     visitor_team_score INT,
     home_team_id INT,
