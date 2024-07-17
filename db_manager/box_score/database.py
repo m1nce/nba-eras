@@ -28,8 +28,8 @@ ON CONFLICT (player_id) DO NOTHING;
 
 game_insert_query = """
 INSERT INTO game (
-    game_id, date, home_team_score, visitor_team_score, home_team_id, visitor_team_id
-) VALUES (%s, %s, %s, %s, %s, %s)
+    game_id, date, season, home_team_score, visitor_team_score, home_team_id, visitor_team_id
+) VALUES (%s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT (game_id) DO NOTHING;
 """
 

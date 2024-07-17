@@ -45,7 +45,7 @@ def process_date(date):
                         player['player']['id'], player['player']['first_name'], player['player']['last_name'], 
                         player['player']['position'], player['player']['height'], player['player']['weight'], 
                         player['player']['jersey_number'], player['player']['college'], player['player']['country'],
-                        player['player']['draft_year'], player['player']['draft_round'],player['player']['draft_number']
+                        none_to_zero(player['player']['draft_year']), none_to_zero(player['player']['draft_round']),none_to_zero(player['player']['draft_number'])
                     )
                     player_records.append(player_record)
 

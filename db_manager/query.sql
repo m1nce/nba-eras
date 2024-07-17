@@ -19,7 +19,7 @@ WITH avg_stats AS (
 )
 
 SELECT 
-    EXTRACT(YEAR FROM game.date) AS year, 
+    game.season, 
     AVG(game.home_team_score) AS avg_home_team_score, 
     AVG(game.visitor_team_score) AS avg_visitor_team_score, 
     AVG(avg_stats.avg_fgm) AS avg_fgm,
@@ -37,4 +37,5 @@ SELECT
     AVG(avg_stats.avg_pts) AS avg_pts
 FROM game
 INNER JOIN avg_stats ON game.game_id = avg_stats.game_id
-GROUP BY year;
+GROUP BY season
+ORDER BY season;
